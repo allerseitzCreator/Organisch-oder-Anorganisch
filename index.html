@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organisch oder nicht?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Narrow:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: lebendig, klar, fürs Klassenzimmer – Schüler sortieren selbst
+   IDEA: ein Labortisch mit Millimeterpapier, auf dem Alltagsprodukte liegen
+   PICTURE: die Produkte als plastisch gezeichnete Verpackungen, frei verschiebbar
+   COLOUR and TYPE: Papierweiß, Tinte, Teal = organisch, Zinnober = anorganisch; Archivo
+   LAYOUT: schmale Werkzeugleiste oben, darunter die ganze Fläche als Tisch */
+:root{color-scheme:light dark;
+--bg:light-dark(#f6f5f0,#14171a);--ink:light-dark(#17191c,#eceae4);--mute:light-dark(#5d6168,#a3a7ad);
+--grid:light-dark(#e3e1d8,#22272c);--grid2:light-dark(#d2cfc3,#2c3238);
+--card:light-dark(#ffffff,#f3f2ee);--cardInk:#17191c;--line:light-dark(#d9d6cc,#343b42);
+--org:#0b7a75;--ano:#d4442a;
+--zone:light-dark(rgba(23,25,28,.035),rgba(255,255,255,.04));--bar:light-dark(#17191c,#0c0e10)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip}
+header{background:var(--bar);color:#f6f5f0;padding:14px max(3vw,14px);display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;position:sticky;top:0;z-index:5000}
+h1{font:800 clamp(20px,2.6vw,30px)/1.05 Archivo,sans-serif;margin:0;text-wrap:balance}
+h1 span{font-weight:400;opacity:.7}
+.by{margin:4px 0 0;font:500 13px "Archivo Narrow",sans-serif;opacity:.7}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+button{font:600 14px Archivo,sans-serif;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid #3a3f45;background:#24282d;color:#f6f5f0;cursor:pointer}
+button:hover{background:#30353b}button:focus-visible{outline:3px solid #6fd3cc;outline-offset:2px}
+button.on{background:var(--org);border-color:var(--org)}
+.legend{display:flex;gap:14px;font:500 13px "Archivo Narrow",sans-serif;padding:8px max(3vw,14px);color:var(--mute);flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.legend b{color:var(--ink)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+#table{position:relative;min-height:calc(100vh - 120px);
+background-image:linear-gradient(var(--grid2) 1px,transparent 1px),linear-gradient(90deg,var(--grid2) 1px,transparent 1px),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+background-size:100px 100px,100px 100px,20px 20px,20px 20px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.card{position:absolute;width:128px;height:150px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;
+border-radius:12px;background:var(--card);color:var(--cardInk);border:1px solid var(--line);
+box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 14px -8px rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;padding:4px 6px 8px}
+.card.drag{cursor:grabbing;box-shadow:0 18px 30px -10px rgba(0,0,0,.4)}
+.card.anim{transition:left .55s cubic-bezier(.3,.8,.3,1),top .55s cubic-bezier(.3,.8,.3,1)}
+.card svg{width:108px;height:108px;flex:none}
+.nm{font:700 13px/1.15 "Archivo Narrow",sans-serif;text-align:center;text-wrap:balance}
+.tag{display:none;position:absolute;top:5px;right:5px;padding:1px 6px;border-radius:20px;font:700 10px "Archivo Narrow",sans-serif;color:#fff}
+.sol .card{border-width:2.5px}
+.sol .card[data-o=o]{border-color:var(--org)}.sol .card[data-o=a]{border-color:var(--ano)}
+.sol .tag{display:inline-block}
+button.go{background:var(--org);border-color:var(--org)}button.go:hover{background:#0d8f89}
+button.ghost{background:transparent;color:var(--cardInk);border-color:#b9b6ab}button.ghost:hover{background:rgba(0,0,0,.05)}
+button.big{min-height:52px;font-size:18px;padding:0 34px}
+#field{position:absolute;border:3px dashed var(--org);border-radius:18px;background:light-dark(rgba(11,122,117,.07),rgba(11,122,117,.14));z-index:1;transition:background .2s,border-style .2s}
+#field.hot{background:light-dark(rgba(11,122,117,.16),rgba(11,122,117,.26));border-style:solid}
+#field .fh{display:flex;align-items:baseline;gap:12px;padding:12px 16px 0;color:var(--org)}
+#field .fh span{font:800 22px/1.1 Archivo,sans-serif}#field small{font:600 14px "Archivo Narrow",sans-serif}
+#field .fe{margin:0;position:absolute;inset:50% 0 auto;transform:translateY(-50%);text-align:center;font:600 16px Archivo,sans-serif;color:var(--org);opacity:.7;pointer-events:none}
+.ov{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:16px;background:rgba(20,23,26,.45);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.ov[hidden]{display:none}
+.panel{background:#fff;color:#17191c;border-radius:18px;padding:clamp(22px,4vw,40px);max-width:560px;width:100%;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);max-height:calc(100vh - 32px);overflow:auto}
+.panel.wide{max-width:720px}
+.panel h2{font:800 clamp(28px,4vw,40px)/1.05 Archivo,sans-serif;margin:0 0 14px}
+.panel .kick{margin:0 0 6px;color:var(--org);font:700 15px "Archivo Narrow",sans-serif}
+.panel .big{font-size:20px;line-height:1.4;margin:0 0 14px}
+.panel ol{padding-left:22px;margin:0 0 24px;color:#3c4046}.panel li{margin:4px 0}
+.panel label{display:block;font-weight:600;margin:18px 0 8px}
+.panel textarea{width:100%;font:16px/1.5 Archivo,sans-serif;padding:12px 14px;border:2px solid #cfcabd;border-radius:10px;resize:vertical;background:#fbfaf6;color:#17191c}
+.panel textarea:focus{outline:none;border-color:var(--org)}
+.panel .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{background:#e3f2f1;color:#0b5a56;border-radius:20px;padding:3px 11px;font:600 14px "Archivo Narrow",sans-serif}
+.chips em{color:#7a7e84}
+.zone{position:absolute;border:2px dashed var(--grid2);border-radius:16px;background:var(--zone);resize:both;overflow:hidden;min-width:160px;min-height:120px}
+.zone .zh{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;cursor:move;touch-action:none}
+.zone .zt{font:800 18px/1.1 Archivo,sans-serif;outline:none;flex:1;padding:2px 4px;border-radius:4px}
+.zone .zt:focus{background:var(--card);color:var(--cardInk)}
+.zone .zx{min-height:30px;width:30px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--grid2);color:var(--mute)}
+.zone.z-o{border-color:var(--org)}.zone.z-o .zt{color:var(--org)}
+.zone.z-a{border-color:var(--ano)}.zone.z-a .zt{color:var(--ano)}
+.hint{position:absolute;left:max(3vw,14px);bottom:12px;font:500 13px "Archivo Narrow",sans-serif;color:var(--mute);pointer-events:none}
+@media(max-width:600px){.tools{margin-left:0}button{font-size:13px;padding:0 10px}}
+@media(prefers-reduced-motion:reduce){.card.anim{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="gCyl" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".4"/><stop offset=".13" stop-color="#000" stop-opacity=".06"/><stop offset=".24" stop-color="#fff" stop-opacity=".6"/><stop offset=".34" stop-color="#fff" stop-opacity=".06"/><stop offset=".76" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>
+<linearGradient id="gSoft" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset=".3" stop-color="#fff" stop-opacity=".25"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>
+<linearGradient id="gV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
+<radialGradient id="gSh"><stop offset="0" stop-color="#000" stop-opacity=".38"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+<linearGradient id="gMet" x1="0" x2="1"><stop offset="0" stop-color="#7d848b"/><stop offset=".28" stop-color="#e9edf0"/><stop offset=".38" stop-color="#fff"/><stop offset=".7" stop-color="#b3bac1"/><stop offset="1" stop-color="#6f767d"/></linearGradient>
+<linearGradient id="gFoil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfd4d9"/><stop offset=".3" stop-color="#fff"/><stop offset=".55" stop-color="#a7aeb5"/><stop offset=".8" stop-color="#eef1f3"/><stop offset="1" stop-color="#bcc3c9"/></linearGradient>
+<linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9a92e"/><stop offset=".35" stop-color="#ffe58a"/><stop offset=".6" stop-color="#c8951f"/><stop offset="1" stop-color="#f2cd5c"/></linearGradient>
+<radialGradient id="gDome" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".4" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></radialGradient>
+<radialGradient id="gCaps" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff6c8"/><stop offset=".35" stop-color="#f0b72a"/><stop offset="1" stop-color="#a5650a"/></radialGradient>
+</defs></svg>
+<header>
+  <div class="ttl"><h1>Organisch oder nicht? <span>Alltagsprodukte sortieren</span></h1><p class="by">erstellt von Markus Seitz</p></div>
+  <div class="tools">
+    <button id="bMix">Mischen</button>
+    <button id="bEnd" class="go" hidden>Ende</button>
+    <button id="bSol" aria-pressed="false" hidden>Lösung zeigen</button>
+    <button id="bFs">Vollbild</button>
+  </div>
+</header>
+<div class="legend" id="legend">
+  <span><b>Arbeitsauftrag:</b> Ziehe alle Stoffe, die du für organisch hältst, in das Feld „Organische Stoffe“.</span>
+  <span id="cnt"></span>
+</div>
+<div id="table">
+  <div id="field"><div class="fh"><span>Organische Stoffe</span><small id="fcnt">0 Stoffe</small></div><p class="fe">Ziehe die organischen Stoffe hierher.</p></div>
+  <div class="hint">36 Produkte · eingeordnet nach Hauptbestandteil</div>
+</div>
+
+<div class="ov" id="intro">
+  <div class="panel">
+    <p class="kick">Einführung in die organische Chemie</p>
+    <h2>Arbeitsauftrag</h2>
+    <p class="big">Gruppiere die Stoffe zusammen, die du für <strong>organische Stoffe</strong> hältst.</p>
+    <ol>
+      <li>Schau dir alle Produkte auf dem Tisch an.</li>
+      <li>Ziehe jedes Produkt, das du für organisch hältst, in das Feld <strong>„Organische Stoffe“</strong>.</li>
+      <li>Alle anderen Produkte bleiben draußen liegen.</li>
+      <li>Wenn du fertig bist, klicke auf <strong>Ende</strong> und begründe deine Gruppierung.</li>
+    </ol>
+    <button id="bStart" class="go big">Start</button>
+  </div>
+</div>
+
+<div class="ov" id="endp" hidden>
+  <div class="panel wide">
+    <h2>Begründe deine Gruppierung</h2>
+    <p>Diese <span id="ecnt"></span> Stoffe hast du als organisch eingeordnet:</p>
+    <div class="chips" id="chips"></div>
+    <label for="why">Woran hast du erkannt, dass ein Stoff organisch ist? Was haben die Stoffe in deinem Feld gemeinsam?</label>
+    <textarea id="why" rows="6" placeholder="Ich habe diese Stoffe als organisch eingeordnet, weil …"></textarea>
+    <div class="row">
+      <button id="bBack" class="ghost">Zurück zur Gruppierung</button>
+      <button id="bDone" class="go">Abgeben</button>
+    </div>
+    <div id="doneMsg" hidden>
+      <p><strong>Danke, deine Begründung ist abgegeben.</strong></p>
+      <div class="row"><button id="bCopy" class="ghost">Text kopieren</button><button id="bShow" class="go">Lösung anzeigen</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+{
+const B={N:'Nahrung',P:'Putzen',W:'Waschen',K:'Kunststoffe',E:'Nahrungsergänzung',A:'Arzneimittel'};
+
+/* ---------- Zeichenhelfer (viewBox 0 0 100 100, Boden bei y≈94) ---------- */
+const S=(rx=32)=>`<ellipse cx="50" cy="94" rx="${rx}" ry="4.5" fill="url(#gSh)"/>`;
+const tx=(x,y,t,c,fs=9,w=800,f='Archivo',ex='')=>`<text x="${x}" y="${y}" text-anchor="middle" font-family="${f},sans-serif" font-weight="${w}" font-size="${fs}" fill="${c}" ${ex}>${t}</text>`;
+const fine=(x,y,w,n,c='#000',o=.22)=>Array.from({length:n},(_,i)=>`<rect x="${x}" y="${y+i*2.6}" width="${(w*(i%2?.72:1)).toFixed(1)}" height="1.1" rx=".5" fill="${c}" opacity="${o}"/>`).join('');
+const rid=(x,y,w,h)=>{let s='';for(let i=x+1.5;i<x+w-.5;i+=1.8)s+=`<path d="M${i.toFixed(1)} ${y+.8}v${h-1.6}" stroke="#000" stroke-opacity=".2" stroke-width=".6"/>`;return s};
+const cap=(x,y,w,h,c,r=true)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="${c}"/>${r?rid(x,y,w,h):''}<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="url(#gCyl)"/>`;
+const box3=(x,y,w,h,dp,c,st='rgba(0,0,0,.18)')=>{const k=dp*.55,sd=`M${x+w} ${y}l${dp} ${-k}v${h}l${-dp} ${k}z`,tp=`M${x} ${y}l${dp} ${-k}h${w}l${-dp} ${k}z`;
+ return `<path d="${sd}" fill="${c}"/><path d="${sd}" fill="#000" opacity=".24"/><path d="${tp}" fill="${c}"/><path d="${tp}" fill="#fff" opacity=".4"/><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/><path d="${sd}M${x} ${y}h${w}v${h}H${x}z${tp}" fill="none" stroke="${st}" stroke-width=".5" stroke-linejoin="round"/>`};
+const bot=(nw,bw,t,nh,sh,b,cx=50)=>{const l=cx-bw/2,r=cx+bw/2,nl=cx-nw/2,nr=cx+nw/2,y1=t+nh,m=sh-y1;
+ return `M${nl} ${t}V${y1}C${nl} ${y1+m*.55} ${l} ${y1+m*.35} ${l} ${sh}V${b-4}Q${l} ${b} ${l+4} ${b}H${r-4}Q${r} ${b} ${r} ${b-4}V${sh}C${r} ${y1+m*.35} ${nr} ${y1+m*.55} ${nr} ${y1}V${t}Z`};
+const streak=(x,y1,y2,w=2.4,o=.55)=>`<path d="M${x} ${y1}V${y2}" stroke="#fff" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
+
+/* kleine Etikett-Motive */
+const I={
+olive:(x,y)=>`<path d="M${x-8} ${y+5}q8-12 16-9" stroke="#4d5a1c" stroke-width="1.1" fill="none"/><path d="M${x+1} ${y-5}q5-3 8 1q-5 2-8-1z" fill="#7d8f35"/><path d="M${x-4} ${y-3}q-5-1-7 3q5 0 7-3z" fill="#6b7d2b"/><ellipse cx="${x-2}" cy="${y+2}" rx="3.2" ry="4.4" transform="rotate(-30 ${x-2} ${y+2})" fill="#6b7a26"/><ellipse cx="${x+3.6}" cy="${y+3}" rx="3" ry="4.1" transform="rotate(25 ${x+3.6} ${y+3})" fill="#2c3510"/><circle cx="${x-3}" cy="${y}" r=".9" fill="#fff" opacity=".6"/>`,
+lemon:(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-7 0q0-6 7-6t7 6q0 6-7 6t-7-6z" fill="#f4d21f"/><path d="M7 0l2.2-.6M-7 0l-2.2.6" stroke="#e0b800" stroke-width="1.6" stroke-linecap="round"/><path d="M-3-3q3-2 6 0" stroke="#fff" stroke-opacity=".7" fill="none"/><path d="M0-6q3-5 8-4q-3 4-8 4z" fill="#4f9a2e"/></g>`,
+drop:(x,y,c='#2a8fd6',s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0-7q6 7 4.5 10a4.6 4.6 0 0 1-9 0Q-6 0 0-7z" fill="${c}"/><path d="M-2 1q0 2 1.5 3" stroke="#fff" stroke-opacity=".8" fill="none" stroke-width="1"/></g>`,
+cubes:(x,y)=>[[-6,1],[3,-1],[-1,-6]].map(([a,b])=>`<g transform="translate(${x+a} ${y+b})"><path d="M0 0l4-2 4 2-4 2z" fill="#fff"/><path d="M0 0v5l4 2V2z" fill="#e4e1d8"/><path d="M8 0v5l-4 2V2z" fill="#cfcbc0"/></g>`).join(''),
+flame:(x,y)=>`<path d="M${x} ${y-8}q7 6 5 11a5 5 0 0 1-10 0q-1-5 5-11z" fill="#2e6be0"/><path d="M${x} ${y-3}q3 3 2 6a2 2 0 0 1-4 0q0-3 2-6z" fill="#a8d0ff"/>`,
+bubbles:(x,y,c='#fff')=>[[0,0,4],[5,-4,2.6],[6,3,2],[-5,-3,2.2]].map(([a,b,r])=>`<circle cx="${x+a}" cy="${y+b}" r="${r}" fill="none" stroke="${c}" stroke-width="1"/><circle cx="${x+a-r*.35}" cy="${y+b-r*.35}" r="${r*.25}" fill="${c}"/>`).join(''),
+fish:(x,y,c='#fff')=>`<path d="M${x-8} ${y}q7-7 14 0q-7 7-14 0zM${x+6} ${y}l5-4v8z" fill="${c}"/><circle cx="${x-4}" cy="${y-1}" r=".9" fill="#1d5c8a"/>`,
+straw:(x,y)=>`<path d="M${x} ${y+7}q-7-4-6-10q2-3 6-2q4-1 6 2q1 6-6 10z" fill="#e0283e"/><path d="M${x-4} ${y-4}l4 2 4-2-4-2z" fill="#3c8b2c"/>${[[-2,0],[2,1],[0,4],[-3,3],[3,-2]].map(([a,b])=>`<circle cx="${x+a}" cy="${y+b}" r=".5" fill="#ffd86b"/>`).join('')}`,
+pill:(x,y,c='#fff')=>`<g transform="rotate(-30 ${x} ${y})"><rect x="${x-7}" y="${y-3}" width="14" height="6" rx="3" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width=".5"/><path d="M${x} ${y-3}v6" stroke="rgba(0,0,0,.2)" stroke-width=".6"/></g>`
+};
+
+/* ---------- Vorlagen ---------- */
+const V={
+// Glasflasche mit Flüssigkeit und Rundum-Etikett
+glass(o){const nw=o.nw||12,bw=o.bw||32,t=o.t||10,nh=o.nh||20,sh=o.sh||44,b=91,l=50-bw/2,p=bot(nw,bw,t,nh,sh,b);
+ const lh=o.lh||24,ly=o.ly||58;
+ return S(24)+cap(50-nw/2-1.5,t-6,nw+3,9,o.cap||'#2a2d30',o.ridge!==false)+
+ `<path d="${p}" fill="${o.g||'#cfe3e8'}" opacity="${o.go||.55}"/>`+
+ (o.lq?`<path d="${bot(nw-2,bw-3,o.lv||t+8,1,o.lv?Math.max(o.lv,sh+1):sh+1,b-1.5)}" fill="${o.lq}" opacity="${o.lo||.92}"/>`:'')+
+ (o.lab===false?'':`<rect x="${l}" y="${ly}" width="${bw}" height="${lh}" fill="${o.lb||'#fff'}"/>`+(o.deco||''))+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".6"/>`+streak(l+5,sh+3,b-6,2.2,.5)+(o.top||'')},
+// PET-Flasche mit Rippen
+pet(o){const p=`M44 12V20C44 25 35 27 35 35V48Q33 51 35 54V86Q35 92 41 92H59Q65 92 65 86V54Q67 51 65 48V35C65 27 56 25 56 20V12Z`;
+ return S(22)+cap(42.5,5,15,9,o.cap)+`<rect x="41.5" y="13" width="17" height="2" rx="1" fill="${o.cap}" opacity=".8"/>`+
+ `<path d="${p}" fill="#dfeff6" opacity=".55"/>`+
+ (o.lq?`<path d="M36 ${o.lv}H64V86Q64 91 59 91H41Q36 91 36 86Z" fill="${o.lq}" opacity=".55"/>`:'')+
+ [40,44,58,80].map(y=>`<path d="M35.5 ${y}H64.5" stroke="#fff" stroke-opacity=".8" stroke-width="1"/><path d="M35.5 ${y+1}H64.5" stroke="#7aa9bf" stroke-opacity=".35" stroke-width=".6"/>`).join('')+
+ (o.lb?`<rect x="35" y="61" width="30" height="16" fill="${o.lb}"/>`+(o.deco||''):'')+
+ `<path d="${p}" fill="url(#gCyl)" opacity=".75"/><path d="${p}" fill="none" stroke="#88b3c6" stroke-width=".7"/>`+streak(39,30,86,2.2,.8)},
+// Faltschachtel
+carton(o){const x=o.x||22,y=o.y||22,w=o.w||46,h=o.h||70,dp=o.dp||12;
+ return `<ellipse cx="${x+w/2+dp/2+2}" cy="${y+h+1}" rx="${w/2+dp}" ry="4.5" fill="url(#gSh)"/>`+box3(x,y,w,h,dp,o.c)+(o.deco||'')+`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#gV)" opacity=".7"/>`},
+// Papiertütchen mit Zackenrand
+sachet(o){const p='M27 17H73L71 90Q71 92 69 92H31Q29 92 29 90Z';let z='M27 17';for(let i=0;i<12;i++)z+=`l${46/24} -2.2l${46/24} 2.2`;
+ return S(24)+`<path d="${z}V21H27Z" fill="${o.c}"/><path d="${z}V21H27Z" fill="#000" opacity=".12"/><path d="${p}" fill="${o.c}"/>`+(o.deco||'')+
+ `<path d="M27 23H73" stroke="#000" stroke-opacity=".15" stroke-dasharray="1.5 1.5"/><path d="${p}" fill="url(#gSoft)"/><path d="M40 24l-2 66M62 24l1 66" stroke="#000" stroke-opacity=".05" stroke-width="2"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.18)" stroke-width=".6"/>`},
+// Salzstreuer aus Glas
+shaker(){const p='M30 30H70V86Q70 92 64 92H36Q30 92 30 86Z';let g='';for(let i=0;i<60;i++){const x=32+((i*37)%36),y=48+((i*53)%42);g+=`<circle cx="${x}" cy="${y}" r=".7" fill="#c9cfd4"/>`}
+ return S(26)+`<path d="${p}" fill="#e3eef2" opacity=".6"/><path d="M31.5 46H68.5V86Q68.5 90.5 64 90.5H36Q31.5 90.5 31.5 86Z" fill="#fbfbfa"/>`+g+
+ `<path d="M28 14H72V30H28Z" fill="url(#gMet)"/><ellipse cx="50" cy="14" rx="22" ry="3.5" fill="#dfe4e8"/><g fill="#5d646b">${[[42,13],[50,12.6],[58,13],[46,15],[54,15]].map(([a,b])=>`<ellipse cx="${a}" cy="${b}" rx="1.2" ry=".6"/>`).join('')}</g>`+
+ `<rect x="30" y="62" width="40" height="15" fill="#2b6cc4"/>${tx(50,72.5,'SALZ','#fff',9.5)}<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`+streak(35,34,86,2.4,.7)},
+// Butterstück in Goldfolie
+butter(){return S(34)+box3(16,56,58,30,14,'#e9be45')+`<rect x="16" y="56" width="58" height="30" fill="url(#gGold)" opacity=".75"/><path d="M74 56l14-7.7v30l-14 7.7z" fill="url(#gGold)" opacity=".5"/>`+
+ `<path d="M16 63H74M16 79H74" stroke="#1f5e9e" stroke-width="2.4"/>${tx(45,74,'Butter','#1f5e9e',11,800,'Archivo')}${fine(22,81.5,20,1,'#1f5e9e',.6)}<path d="M20 58l10 26M48 57l6 28" stroke="#fff" stroke-opacity=".35" stroke-width="1.2"/>`},
+// Spülmittelflasche
+squeeze(o){const p='M40 18H60C66 18 68 24 68 32V86Q68 92 62 92H38Q32 92 32 86V32C32 24 34 18 40 18Z';
+ return S(24)+`<path d="M44 6h12l1 12H43z" fill="#fff"/><path d="M44 6h12l1 12H43z" fill="url(#gCyl)"/><rect x="47" y="3" width="6" height="4" rx="1" fill="#e9e9e9"/>`+
+ `<path d="${p}" fill="${o.c}" opacity=".88"/><path d="M33 40H67V86Q67 91 62 91H38Q33 91 33 86Z" fill="${o.c2}" opacity=".7"/>`+
+ `<rect x="36" y="48" width="28" height="30" rx="3" fill="#fff"/>${I.lemon(50,58,.9)}${tx(50,72,o.l,'#2a7a33',5.4)}${fine(41,74.5,18,1,'#000',.25)}`+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`+streak(37,26,86,2.4,.6)},
+// Sprühflasche
+spray(o){const p='M36 34H62C66 40 70 46 70 54V86Q70 92 64 92H36Q30 92 30 86V48Q30 40 36 34Z';
+ return S(24)+`<path d="M34 14H58L68 18V24H60V30H38V22H34Z" fill="${o.tr}"/><path d="M34 14H58L68 18V24H60V30H38V22H34Z" fill="url(#gV)"/><path d="M42 24q-6 4-5 12" stroke="${o.tr}" stroke-width="4" stroke-linecap="round" fill="none"/>`+
+ `<rect x="40" y="29" width="18" height="6" rx="1" fill="${o.tr}"/>${rid(40,29,18,6)}<path d="${p}" fill="${o.c}"/>`+
+ `<rect x="33" y="52" width="34" height="28" rx="2" fill="${o.lb}"/>`+(o.deco||'')+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`+streak(35,48,86,2.2,.6)},
+// WC-Reiniger mit Entenhals
+wc(){const p='M44 26C44 32 30 40 30 52V86Q30 92 36 92H62Q68 92 68 86V52C68 40 56 32 56 26Z';
+ return S(24)+`<path d="M47 8Q47 2 54 2L70 4Q74 5 72 9L60 22L56 26H44Z" fill="#2b6cc4"/><path d="M47 8Q47 2 54 2L70 4Q74 5 72 9L60 22L56 26H44Z" fill="url(#gV)"/>`+
+ `<path d="${p}" fill="#f2b8d2"/><path d="M31 58H67V86Q67 91 62 91H36Q31 91 31 86Z" fill="#e889b5" opacity=".6"/>`+
+ `<rect x="34" y="56" width="30" height="24" rx="2" fill="#fff"/>${tx(49,67,'WC','#c4307a',11)}${tx(49,75,'KRAFT-GEL','#2b6cc4',4.4,700,'Archivo Narrow')}`+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`+streak(35,50,86)},
+// Dose mit Deckel
+tub(o){const p='M22 40H78V86Q78 92 72 92H28Q22 92 22 86Z';
+ return S(32)+`<path d="${p}" fill="${o.c}"/><rect x="22" y="56" width="56" height="26" fill="${o.lb}"/>`+(o.deco||'')+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="M20 30H80V42H20Z" fill="${o.lid}"/>${rid(20,30,60,12)}<path d="M20 30H80V42H20Z" fill="url(#gCyl)"/><ellipse cx="50" cy="30" rx="30" ry="5" fill="${o.lid}"/><ellipse cx="50" cy="30" rx="30" ry="5" fill="#fff" opacity=".3"/><ellipse cx="50" cy="30" rx="21" ry="3.2" fill="none" stroke="#000" stroke-opacity=".12"/>`},
+// Kanister mit Griff
+jug(o){const p='M30 22H52L60 28H70Q74 28 74 32V86Q74 92 68 92H30Q24 92 24 86V28Q24 22 30 22Z';
+ return S(30)+`<rect x="31" y="11" width="17" height="12" rx="2" fill="${o.cap}"/>${rid(31,11,17,12)}<rect x="31" y="11" width="17" height="12" rx="2" fill="url(#gCyl)"/>`+
+ `<path d="${p}" fill="${o.c}"/><path d="M58 33H69V48H60Q57 48 57 45V36Q57 33 60 33Z" fill="var(--card)"/><path d="M58 33H69V48H60Q57 48 57 45V36Q57 33 60 33Z" fill="#000" opacity=".1"/>`+
+ `<rect x="28" y="54" width="42" height="30" rx="3" fill="${o.lb}"/>`+(o.deco||'')+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`+streak(29,32,86,2.4,.5)},
+// Seifenstück
+soap(){return S(34)+`<path d="M18 62Q18 56 26 52L64 50Q84 50 84 58V70Q84 78 76 80L30 84Q18 84 18 76Z" fill="#e8dcb4"/><path d="M18 62Q18 56 26 52L64 50Q84 50 84 58Q84 63 74 65L30 68Q18 68 18 62Z" fill="#f3ead0"/>`+
+ `<path d="M18 62Q18 68 30 68L74 65Q84 63 84 58V70Q84 78 76 80L30 84Q18 84 18 76Z" fill="url(#gV)"/>`+
+ `<ellipse cx="51" cy="59" rx="22" ry="5.5" fill="none" stroke="#c9b57e" stroke-width="1.3"/>${tx(51,61.3,'KERNSEIFE','#b39a55',6.4,800,'Archivo','transform="skewX(-8)" dx="8"')}`},
+// Plastiktüte
+bag(){const p='M20 34H80L77 88Q76 92 72 92H28Q24 92 23 88Z';
+ return S(32)+`<path d="M30 36C28 14 42 14 42 36M58 36C58 14 72 14 70 36" fill="none" stroke="#e6e7e8" stroke-width="5"/><path d="M30 36C28 14 42 14 42 36M58 36C58 14 72 14 70 36" fill="none" stroke="#c3c6c9" stroke-width="5" opacity=".4"/>`+
+ `<path d="${p}" fill="#f4f5f6" opacity=".92"/><path d="M28 40L34 88M46 38L44 90M62 40L58 70L64 90M72 44L70 80" stroke="#b8bdc2" stroke-opacity=".55" fill="none"/>`+
+ `<path d="M30 52Q40 47 52 55T74 52" fill="none" stroke="#fff" stroke-width="3" opacity=".9"/><circle cx="50" cy="70" r="7" fill="none" stroke="#2b8a4a" stroke-width="1.4"/>${tx(50,72.4,'PE','#2b8a4a',6.5)}`+
+ `<path d="${p}" fill="url(#gSoft)" opacity=".8"/><path d="${p}" fill="none" stroke="#c3c6c9" stroke-width=".7"/>`},
+// Joghurtbecher
+cup(){const p='M24 36H76L70 88Q69 92 65 92H35Q31 92 30 88Z';
+ return S(26)+`<path d="${p}" fill="#fbfaf6"/><path d="M25.5 48H74.5L72.6 64H27.4Z" fill="#f4c6d0"/>${I.straw(50,72)}${tx(50,59,'Erdbeere','#b02340',7.5,800)}${fine(38,82,24,2,'#000',.18)}`+
+ `<path d="${p}" fill="url(#gCyl)" opacity=".85"/><ellipse cx="50" cy="36" rx="27" ry="6" fill="url(#gFoil)"/><ellipse cx="50" cy="36" rx="27" ry="6" fill="none" stroke="#9aa1a7" stroke-width=".6"/><path d="M75 35q8 1 7 6l-4-1z" fill="url(#gFoil)"/>`},
+// Zahnbürste liegend
+brush(){return S(38)+`<g transform="rotate(-24 50 55)"><path d="M10 58Q10 52 18 52L66 53Q72 53 74 55H78V59H74Q72 61 66 61L18 62Q10 62 10 58Z" fill="#26a69a"/><path d="M14 55Q30 54 50 55" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" fill="none"/>`+
+ `<path d="M26 54Q34 52 42 54V60Q34 62 26 60Z" fill="#1a6f66"/><rect x="77" y="53" width="15" height="8" rx="3" fill="#26a69a"/>`+
+ Array.from({length:6},(_,i)=>`<path d="M${79+i*2.3} 53V43" stroke="${i%2?'#ffffff':'#7fd3f5'}" stroke-width="2" stroke-linecap="round"/>`).join('')+`<path d="M10 58Q10 52 18 52L66 53Q72 53 74 55H78V59H74Q72 61 66 61L18 62Q10 62 10 58Z" fill="url(#gV)"/></g>`},
+// Brausetabletten-Röhrchen
+tube(o){const p='M36 22H64V88Q64 92 60 92H40Q36 92 36 88Z';
+ return S(20)+cap(34,8,32,15,o.cap,false)+`<rect x="34" y="20" width="32" height="3" fill="#000" opacity=".15"/><path d="${p}" fill="url(#gMet)"/><rect x="36" y="34" width="28" height="44" fill="${o.c}"/>`+(o.deco||'')+
+ `<path d="${p}" fill="url(#gCyl)" opacity=".8"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`},
+// Dose mit Schraubdeckel (Nahrungsergänzung)
+jar(o){const p='M28 30H72V86Q72 92 66 92H34Q28 92 28 86Z';
+ return S(28)+`<path d="${p}" fill="${o.c}" opacity="${o.op||1}"/>`+(o.inner||'')+`<rect x="28" y="48" width="44" height="30" fill="${o.lb}"/>`+(o.deco||'')+
+ `<path d="${p}" fill="url(#gCyl)"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`+cap(26,18,48,14,o.cap)+(o.front||'')},
+// Blisterstreifen in Perspektive
+blister(o){let d='';for(let r=0;r<4;r++)for(let k=0;k<2;k++){const x=38+k*20+r*-3,y=30+r*14;
+  d+=`<ellipse cx="${x}" cy="${y}" rx="7.5" ry="6" fill="${o.t}"/><ellipse cx="${x}" cy="${y}" rx="7.5" ry="6" fill="url(#gDome)"/><ellipse cx="${x}" cy="${y}" rx="7.5" ry="6" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width=".8"/>`}
+ return S(30)+`<path d="M30 20L72 18L66 90L22 88Z" fill="url(#gFoil)"/><path d="M30 20L72 18L66 90L22 88Z" fill="none" stroke="#9aa1a7" stroke-width=".6"/><path d="M50 19L44 89M26 54L69 54" stroke="#8d949a" stroke-width=".6" stroke-dasharray="1 1"/>`+d},
+// Salbentube aus Metall
+ointment(){const p='M20 74L22 50Q40 44 76 46L86 44V58L76 56Q40 62 22 58Z';
+ return S(36)+`<g transform="rotate(-12 50 60)"><rect x="5" y="46" width="16" height="14" rx="2" fill="#2b6cc4"/>${rid(5,46,16,14)}<rect x="5" y="46" width="16" height="14" rx="2" fill="url(#gV)"/>`+
+ `<path d="M21 46H78L86 44V62L78 60H21Z" fill="url(#gMet)"/><path d="M80 45.5V60.5M83 45V61" stroke="#7d848b" stroke-width=".6"/>`+
+ `<rect x="30" y="47" width="40" height="12" fill="#fff" opacity=".85"/>${tx(50,55.6,'ZINKSALBE','#2b6cc4',6.6)}<path d="M21 46H78L86 44V62L78 60H21Z" fill="url(#gV)" opacity=".6"/></g>`},
+// Kunststoff-Ampullen
+ampoule(){const one=(x,r)=>{const p=`M${x-4} 14H${x+4}V20L${x+3} 24Q${x+9} 28 ${x+9} 34V84Q${x+9} 90 ${x+4} 90H${x-4}Q${x-9} 90 ${x-9} 84V34Q${x-9} 28 ${x-3} 24L${x-4} 20Z`;
+  return `<g transform="rotate(${r} ${x} 90)"><rect x="${x-6}" y="6" width="12" height="9" rx="2" fill="#eef4f7" stroke="#b8ccd6" stroke-width=".6"/><path d="${p}" fill="#eaf3f7" opacity=".85"/><path d="M${x-8} 46H${x+8}V84Q${x+8} 89 ${x+4} 89H${x-4}Q${x-8} 89 ${x-8} 84Z" fill="#cde6f2" opacity=".7"/><rect x="${x-8.5}" y="56" width="17" height="14" fill="#fff"/>${tx(x,62,'NaCl','#2b6cc4',4.8)}${tx(x,68,'0,9 %','#2b6cc4',4.6,700)}<path d="${p}" fill="url(#gCyl)" opacity=".7"/><path d="${p}" fill="none" stroke="#9ebccb" stroke-width=".6"/></g>`};
+ return S(26)+one(38,-6)+one(60,5)},
+// Alufolie im Spender-Karton
+foil(){return `<ellipse cx="54" cy="80" rx="42" ry="5" fill="url(#gSh)"/>`+box3(8,52,72,24,18,'#3d5fa8')+
+ `<path d="M80 52l18-9.9v4l-18 9.9z" fill="url(#gFoil)"/><path d="M8 52H80V58H8Z" fill="url(#gFoil)"/><path d="M8 52l18-9.9h72l-18 9.9z" fill="#5b7cc4"/><path d="M8 52l18-9.9h72l-18 9.9z" fill="url(#gFoil)" opacity=".55"/>`+
+ `<path d="M10 66H50" stroke="#fff" stroke-width=".8" opacity=".5"/>${tx(31,72,'ALUFOLIE','#fff',8.5)}<path d="M54 60h22v12H54z" fill="url(#gFoil)"/><path d="M8 58l3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2 3-2 3 2" stroke="#2a3f73" fill="none" stroke-width=".7"/>`},
+// Arzneischachtel (flach)
+med(o){return `<ellipse cx="54" cy="84" rx="40" ry="5" fill="url(#gSh)"/>`+box3(12,46,64,36,16,'#fbfbfb','rgba(0,0,0,.2)')+
+ `<path d="M12 46H76V56H12Z" fill="${o.c}"/><path d="M76 46l16-8.8v10l-16 8.8z" fill="${o.c}" opacity=".85"/><path d="M12 46l16-8.8h64l-16 8.8z" fill="${o.c}" opacity=".35"/>`+
+ tx(36,69,o.l,o.c,o.fs||11)+tx(36,76.5,o.s,'#555',5.4,600,'Archivo Narrow')+I.pill(64,70,o.p||'#fff')+`<rect x="12" y="46" width="64" height="36" fill="url(#gV)" opacity=".5"/>`}
+};
+
+/* ---------- Produkte: Name, Bereich, organisch?, Vorlage, Optionen ---------- */
+const D=[
+['Haushaltszucker','N','o','carton',{c:'#f6f3ea',deco:`<rect x="22" y="30" width="46" height="16" fill="#2b5fa8"/>${tx(45,41.5,'ZUCKER','#fff',10)}${I.cubes(45,64)}${fine(28,80,34,3,'#2b5fa8',.35)}`}],
+['Speisesalz','N','a','shaker',{}],
+['Olivenöl','N','o','glass',{g:'#9aa84a',lq:'#7d8a12',lv:26,cap:'#1e2a10',nw:10,bw:28,t:12,nh:24,sh:48,ly:58,lh:26,lb:'#f4efdc',deco:`${tx(50,67,'Olivenöl','#3b4512',6.8,800)}${I.olive(50,76)}`}],
+['Essig','N','o','glass',{g:'#e8d9a8',lq:'#e0b85a',lo:.55,lv:28,cap:'#7a1e1e',lb:'#fff',ly:60,lh:20,deco:`<rect x="34" y="60" width="32" height="5" fill="#7a1e1e"/>${tx(50,74,'ESSIG','#7a1e1e',8.6)}${fine(42,76.5,16,1)}`}],
+['Mineralwasser','N','a','pet',{cap:'#2b6cc4',lq:'#bfe3f5',lv:30,lb:'#2b6cc4',deco:`${tx(50,72,'Mineral','#fff',6,800)}`}],
+['Natron','N','a','sachet',{c:'#d8392b',deco:`${tx(50,44,'NATRON','#fff',10)}<circle cx="50" cy="62" r="10" fill="#fff" opacity=".95"/>${tx(50,65,'NaHCO₃','#d8392b',5.4,700)}${fine(36,79,28,3,'#fff',.6)}`}],
+['Butter','N','o','butter',{}],
+['Backpulver','N','a','sachet',{c:'#f7f3e6',deco:`<rect x="29" y="34" width="42" height="14" fill="#c4322a"/>${tx(50,44,'Backpulver','#fff',7.4)}<ellipse cx="50" cy="64" rx="12" ry="7" fill="#e7c48a"/><path d="M40 63q10-9 20 0" fill="#f2d7a5"/>${fine(36,78,28,3,'#7a5a20',.35)}`}],
+['Spülmittel','P','o','squeeze',{c:'#7cc86a',c2:'#3c9a3f',l:'SPÜLMITTEL'}],
+['Spiritus','P','o','glass',{g:'#d6e2f7',lq:'#3e63d8',lo:.75,lv:26,cap:'#c4322a',nw:12,bw:30,t:12,nh:16,sh:40,lb:'#fff',ly:56,lh:26,deco:`${I.flame(50,64)}${tx(50,78,'SPIRITUS','#2a4fb8',4.9)}`}],
+['WC-Reiniger','P','a','wc',{}],
+['Chlorreiniger','P','a','spray',{c:'#f4f6f7',tr:'#c4322a',lb:'#fff',deco:`<rect x="33" y="52" width="34" height="9" fill="#c4322a"/>${tx(50,59,'CHLOR','#fff',7)}${I.drop(50,69,'#9ed0ec',.8)}${fine(40,75,20,2)}`}],
+['Zitronensäure-Entkalker','P','o','sachet',{c:'#f2cf2f',deco:`${tx(50,42,'Zitronen-','#4a3b00',7.6)}${tx(50,50,'säure','#4a3b00',7.6)}<circle cx="50" cy="64" r="11" fill="#fff"/>${I.lemon(50,64,1.1)}${fine(36,79,28,3,'#4a3b00',.3)}`}],
+['Rohrreiniger','P','a','tub',{c:'#2f3439',lid:'#ffd23f',lb:'#ffd23f',deco:`${tx(50,67,'ROHRFREI','#2f3439',8.4)}<path d="M40 72h20l-3 6H43z" fill="#2f3439"/>${tx(50,77,'!','#ffd23f',5)}`}],
+['Flüssigwaschmittel','W','o','jug',{c:'#2a7bd6',cap:'#f6a21a',lb:'#fff',deco:`${tx(49,66,'WASCH','#2a7bd6',8.6)}${I.bubbles(49,76,'#2a7bd6')}`}],
+['Weichspüler','W','o','jug',{c:'#ee9ac6',cap:'#fff',lb:'#fff',deco:`${tx(49,66,'SOFT','#c33c87',9)}<path d="M41 75q8-7 16 0q-8 7-16 0z" fill="#f6c7de"/><circle cx="49" cy="75" r="2.4" fill="#c33c87"/>`}],
+['Fleckensalz','W','a','tub',{c:'#f07a2a',lid:'#fff',lb:'#fff',deco:`${tx(50,68,'OXI','#f07a2a',11)}${fine(38,72,24,3,'#f07a2a',.5)}`}],
+['Kernseife','W','o','soap',{}],
+['PET-Flasche','K','o','pet',{cap:'#2c9a4a'}],
+['Plastiktüte','K','o','bag',{}],
+['Joghurtbecher','K','o','cup',{}],
+['Zahnbürste','K','o','brush',{}],
+['Glasflasche','K','a','glass',{g:'#2f6b3a',go:.85,cap:'#c9a227',ridge:false,nw:11,bw:30,t:8,nh:26,sh:48,lab:false,top:`<rect x="44" y="20" width="12" height="7" fill="#e8dfc4" opacity=".9"/>`}],
+['Alufolie','K','a','foil',{}],
+['Vitamin C','E','o','tube',{c:'#f39a1f',cap:'#ffffff',deco:`<circle cx="50" cy="50" r="8" fill="#ffd27a"/><circle cx="50" cy="50" r="8" fill="none" stroke="#fff" stroke-width="1.2"/>${tx(50,66,'VITAMIN','#fff',5.4)}${tx(50,74,'C','#fff',9)}`}],
+['Omega-3-Kapseln','E','o','jar',{c:'#7a4a12',op:.85,cap:'#1d1f22',lb:'#1d5c8a',deco:`${tx(50,60,'OMEGA-3','#fff',7.4)}${I.fish(50,69)}`,front:`<g transform="rotate(-20 78 88)"><ellipse cx="78" cy="88" rx="7" ry="3.6" fill="url(#gCaps)"/></g><g transform="rotate(15 20 89)"><ellipse cx="20" cy="89" rx="7" ry="3.6" fill="url(#gCaps)"/></g>`}],
+['Magnesium','E','a','tube',{c:'#3a86c8',cap:'#3a86c8',deco:`${tx(50,52,'Mg','#fff',13)}${tx(50,66,'MAGNESIUM','#fff',4)}${fine(42,70,16,2,'#fff',.5)}`}],
+['Calcium','E','a','jar',{c:'#f4f4f0',cap:'#f4f4f0',lb:'#fff',deco:`<rect x="28" y="48" width="44" height="7" fill="#c4322a"/>${tx(50,68,'Ca','#c4322a',12)}${fine(38,72,24,1,'#000',.25)}`,front:`<ellipse cx="80" cy="90" rx="6" ry="2.5" fill="#fbfbf8" stroke="#d6d6cf" stroke-width=".6"/>`}],
+['Eisentabletten','E','a','blister',{t:'#a32a34'}],
+['Aspirin','A','o','med',{c:'#1f8a4c',l:'ASS 500',s:'Tabletten',p:'#fff'}],
+['Ibuprofen','A','o','med',{c:'#d23f5a',l:'IBU 400',s:'Filmtabletten',p:'#f6d9df'}],
+['Zinksalbe','A','a','ointment',{}],
+['Kohletabletten','A','a','blister',{t:'#1e2124'}],
+['Jodtabletten','A','a','med',{c:'#6a3fb5',l:'Kalium-',fs:8.4,s:'iodid 200 µg',p:'#fff'}],
+['Hustensaft','A','o','glass',{g:'#5a2a0e',go:.9,lq:'#3a1606',lv:32,cap:'#fff',ridge:false,nw:14,bw:34,t:16,nh:10,sh:36,lb:'#fff',ly:52,lh:28,deco:`${tx(50,62,'Husten-','#7a3a10',7.6)}${tx(50,70,'saft','#7a3a10',7.6)}${fine(40,74,20,2)}`,top:`<path d="M40 4H60L58 16H42Z" fill="#fff" opacity=".9" stroke="#bbb" stroke-width=".5"/><path d="M42 8H58" stroke="#bbb" stroke-width=".5"/>`}],
+['Kochsalzlösung','A','a','ampoule',{}]
+].map((r,i)=>({i,n:r[0],b:r[1],o:r[2],t:r[3],x:r[4]}));
+
+const T=document.getElementById('table'),F=document.getElementById('field'),$=id=>document.getElementById(id);
+let top=10,started=false,done=false;
+const CW=128,CH=150;
+
+T.insertAdjacentHTML('beforeend',D.map(d=>`<div class="card" data-i="${d.i}" data-o="${d.o}" data-in="0" tabindex="0" aria-label="${d.n}">
+<svg viewBox="0 0 100 100" aria-hidden="true">${V[d.t](d.x)}</svg><div class="nm">${d.n}</div>
+<span class="tag" style="background:var(--${d.o=='o'?'org':'ano'})">${d.o=='o'?'organisch':'anorganisch'}</span></div>`).join(''));
+const cards=[...T.querySelectorAll('.card')];
+
+const place=(el,x,y)=>{el.style.left=x+'px';el.style.top=y+'px'};
+const animate=()=>{cards.forEach(c=>c.classList.add('anim'));clearTimeout(animate.t);animate.t=setTimeout(()=>cards.forEach(c=>c.classList.remove('anim')),650)};
+
+/* Feld links (breit) oder oben (schmal), Ablagefläche für die übrigen Karten */
+let R={};
+function layout(){
+  const W=T.clientWidth,wide=W>=820,vh=window.innerHeight-120;
+  if(wide){
+    const fw=Math.round(Math.max(300,W*.4)),rx=12+fw+18,rw=W-rx-8,cols=Math.max(1,Math.floor(rw/(CW+12)));
+    const H=Math.max(vh,Math.ceil(cards.length/cols)*(CH+16)+40);
+    R={fx:12,fy:12,fw,fh:H-24,rx,ry:16,rw,cols,H};
+  }else{
+    const fh=CH*2+90,ry=12+fh+20,rw=W-16,cols=Math.max(1,Math.floor(rw/(CW+10)));
+    R={fx:8,fy:12,fw:W-16,fh,rx:8,ry,rw,cols,H:Math.max(vh,ry+Math.ceil(cards.length/cols)*(CH+14)+40)};
+  }
+  Object.assign(F.style,{left:R.fx+'px',top:R.fy+'px',width:R.fw+'px',height:R.fh+'px'});
+  T.style.height=R.H+'px';
+}
+const inField=c=>{const x=c.offsetLeft+CW/2,y=c.offsetTop+CH/2;return x>R.fx&&x<R.fx+R.fw&&y>R.fy&&y<R.fy+R.fh};
+
+function mix(){
+  const out=cards.filter(c=>c.dataset.in!='1');
+  const sx=R.cols>1?(R.rw-CW)/(R.cols-1):0;
+  out.sort(()=>Math.random()-.5).forEach((c,k)=>{const r=Math.floor(k/R.cols),col=k%R.cols;
+    place(c,Math.round(R.rx+col*sx+(Math.random()-.5)*10),Math.round(R.ry+r*(CH+16)+(Math.random()-.5)*10));
+    c.style.rotate=((Math.random()-.5)*7).toFixed(1)+'deg'});
+  animate();
+}
+
+function update(){
+  const n=cards.filter(c=>c.dataset.in=='1').length;
+  $('fcnt').textContent=n==1?'1 Stoff':n+' Stoffe';
+  F.querySelector('.fe').hidden=n>0;
+  $('cnt').textContent=started?`${n} von ${cards.length} Produkten im Feld`:'';
+  $('bEnd').hidden=!started||n==0;
+}
+
+cards.forEach(c=>{
+  c.addEventListener('pointerdown',e=>{
+    if(!started)return;
+    e.preventDefault();c.setPointerCapture(e.pointerId);c.style.zIndex=++top+100;c.classList.add('drag');
+    const x0=c.offsetLeft,y0=c.offsetTop,sx=e.clientX,sy=e.clientY;
+    const mv=ev=>{place(c,Math.min(Math.max(0,x0+ev.clientX-sx),T.clientWidth-CW),Math.min(Math.max(0,y0+ev.clientY-sy),T.clientHeight-CH));F.classList.toggle('hot',inField(c))};
+    const up=()=>{c.removeEventListener('pointermove',mv);c.removeEventListener('pointerup',up);c.classList.remove('drag');F.classList.remove('hot');
+      c.dataset.in=inField(c)?'1':'0';if(c.dataset.in=='1')c.style.rotate='0deg';update()};
+    c.addEventListener('pointermove',mv);c.addEventListener('pointerup',up);
+  });
+});
+
+$('bMix').onclick=mix;
+$('bStart').onclick=()=>{started=true;$('intro').hidden=true;update()};
+
+const why=$('why');
+try{why.value=localStorage.getItem('orgchem-why')||''}catch(e){}
+why.addEventListener('input',()=>{why.style.borderColor='';try{localStorage.setItem('orgchem-why',why.value)}catch(e){}});
+const chosen=()=>cards.filter(c=>c.dataset.in=='1').map(c=>D[c.dataset.i].n);
+/* Karten lückenlos in Reihen ordnen: im Feld und daneben */
+function tidy(){
+  const ord=a=>a.sort((p,q)=>(Math.round(p.offsetTop/60)-Math.round(q.offsetTop/60))||(p.offsetLeft-q.offsetLeft));
+  const ins=ord(cards.filter(c=>c.dataset.in=='1')),outs=ord(cards.filter(c=>c.dataset.in!='1'));
+  const g=10,fc=Math.max(1,Math.floor((R.fw-24+g)/(CW+g))),fx0=R.fx+Math.round((R.fw-(fc*(CW+g)-g))/2);
+  const need=50+Math.ceil(ins.length/fc)*(CH+g)+8;
+  if(need>R.fh){R.fh=need;F.style.height=need+'px'}
+  ins.forEach((c,k)=>{c.style.rotate='0deg';place(c,fx0+(k%fc)*(CW+g),R.fy+50+Math.floor(k/fc)*(CH+g))});
+  const oc=Math.max(1,Math.floor((R.rw+g)/(CW+g))),ry0=R.rx>R.fx+10?R.ry:R.fy+R.fh+20;
+  outs.forEach((c,k)=>{c.style.rotate='0deg';place(c,R.rx+(k%oc)*(CW+g),ry0+Math.floor(k/oc)*(CH+g))});
+  const h=Math.max(R.fy+R.fh+24,ry0+Math.ceil(outs.length/oc)*(CH+g)+30,window.innerHeight-120);
+  T.style.height=h+'px';if(R.rx>R.fx+10&&h-24>R.fh){R.fh=h-24;F.style.height=R.fh+'px'}
+  animate();
+}
+$('bEnd').onclick=()=>{
+  tidy();
+  const ch=chosen();$('ecnt').textContent=ch.length;
+  $('chips').innerHTML=ch.map(n=>`<span>${n}</span>`).join('');
+  setTimeout(()=>{$('endp').hidden=false;if(!done)why.focus()},800);
+};
+$('bBack').onclick=()=>{$('endp').hidden=true};
+$('bDone').onclick=()=>{
+  if(why.value.trim().length<10){why.style.borderColor='#d4442a';why.placeholder='Bitte schreibe zuerst eine Begründung.';why.focus();return}
+  done=true;why.readOnly=true;$('bDone').hidden=true;$('bBack').hidden=true;$('doneMsg').hidden=false;$('bEnd').textContent='Begründung';
+};
+$('bCopy').onclick=()=>{const t=`Als organisch eingeordnet: ${chosen().join(', ')}\n\nBegründung: ${why.value}`;
+  navigator.clipboard.writeText(t).then(()=>{$('bCopy').textContent='Kopiert'},()=>{why.readOnly=false;why.select();why.readOnly=true})};
+const bSol=$('bSol');
+const sol=on=>{T.classList.toggle('sol',on);bSol.classList.toggle('on',on);bSol.setAttribute('aria-pressed',on);bSol.textContent=on?'Lösung verbergen':'Lösung zeigen'};
+$('bShow').onclick=()=>{$('endp').hidden=true;bSol.hidden=false;sol(true)};
+bSol.onclick=()=>sol(!T.classList.contains('sol'));
+$('bFs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.body.requestFullscreen().catch(()=>{})}catch(e){}};
+
+let lw=0;
+const ro=new ResizeObserver(()=>{const w=T.clientWidth;if(Math.abs(w-lw)<4)return;lw=w;layout();
+  cards.forEach(c=>{if(c.dataset.in=='1'&&!inField(c)){place(c,R.fx+10+Math.random()*Math.max(0,R.fw-CW-20),R.fy+46+Math.random()*Math.max(0,R.fh-CH-56))}});
+  mix();});
+ro.observe(T);
+update();
+}
+</script>
+</body>
+</html>
