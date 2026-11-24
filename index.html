@@ -69,6 +69,9 @@ button.big{min-height:52px;font-size:18px;padding:0 34px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips span{background:#e3f2f1;color:#0b5a56;border-radius:20px;padding:3px 11px;font:600 14px "Archivo Narrow",sans-serif}
 .chips em{color:#7a7e84}
+#note{position:absolute;z-index:60;background:#fffdf4;color:#17191c;border:2px solid var(--org);border-radius:14px;padding:14px 18px 16px;box-shadow:0 10px 24px -12px rgba(0,0,0,.35)}
+#note .nh{font:800 18px/1.1 Archivo,sans-serif;color:var(--org);margin-bottom:8px}
+#note p{margin:0;font:17px/1.5 Archivo,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
 .zone{position:absolute;border:2px dashed var(--grid2);border-radius:16px;background:var(--zone);resize:both;overflow:hidden;min-width:160px;min-height:120px}
 .zone .zh{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;cursor:move;touch-action:none}
 .zone .zt{font:800 18px/1.1 Archivo,sans-serif;outline:none;flex:1;padding:2px 4px;border-radius:4px}
@@ -108,6 +111,7 @@ button.big{min-height:52px;font-size:18px;padding:0 34px}
 </div>
 <div id="table">
   <div id="field"><div class="fh"><span>Organische Stoffe</span><small id="fcnt">0 Stoffe</small></div><p class="fe">Ziehe die organischen Stoffe hierher.</p></div>
+  <div id="note" hidden><div class="nh">Unsere Begründung</div><p id="noteTxt"></p></div>
   <div class="hint">36 Produkte · eingeordnet nach Hauptbestandteil</div>
 </div>
 
@@ -135,11 +139,7 @@ button.big{min-height:52px;font-size:18px;padding:0 34px}
     <textarea id="why" rows="6" placeholder="Ich habe diese Stoffe als organisch eingeordnet, weil …"></textarea>
     <div class="row">
       <button id="bBack" class="ghost">Zurück zur Gruppierung</button>
-      <button id="bDone" class="go">Abgeben</button>
-    </div>
-    <div id="doneMsg" hidden>
-      <p><strong>Danke, deine Begründung ist abgegeben.</strong></p>
-      <div class="row"><button id="bCopy" class="ghost">Text kopieren</button><button id="bShow" class="go">Lösung anzeigen</button></div>
+      <button id="bDone" class="go">Speichern</button>
     </div>
   </div>
 </div>
@@ -324,7 +324,7 @@ const D=[
 ].map((r,i)=>({i,n:r[0],b:r[1],o:r[2],t:r[3],x:r[4]}));
 
 const T=document.getElementById('table'),F=document.getElementById('field'),$=id=>document.getElementById(id);
-let top=10,started=false,done=false;
+let top=10,started=false;
 const CW=128,CH=150;
 
 T.insertAdjacentHTML('beforeend',D.map(d=>`<div class="card" data-i="${d.i}" data-o="${d.o}" data-in="0" tabindex="0" aria-label="${d.n}">
@@ -381,7 +381,7 @@ cards.forEach(c=>{
   });
 });
 
-$('bMix').onclick=mix;
+$('bMix').onclick=()=>{clearNote();mix()};
 $('bStart').onclick=()=>{started=true;$('intro').hidden=true;update()};
 
 const why=$('why');
@@ -401,30 +401,51 @@ function tidy(){
   const h=Math.max(R.fy+R.fh+24,ry0+Math.ceil(outs.length/oc)*(CH+g)+30,window.innerHeight-120);
   T.style.height=h+'px';if(R.rx>R.fx+10&&h-24>R.fh){R.fh=h-24;F.style.height=R.fh+'px'}
   animate();
+  return {inEnd:R.fy+50+Math.ceil(ins.length/fc)*(CH+g),outEnd:ry0+Math.ceil(outs.length/oc)*(CH+g),ry0};
+}
+/* Begründung dort ablegen, wo Platz ist */
+function showNote(){
+  const N=$('note'),t=tidy(),wide=R.rx>R.fx+10;
+  $('noteTxt').textContent=why.value.trim();N.hidden=false;
+  const inFree=R.fy+R.fh-t.inEnd-12;
+  let x,y,w;
+  if(wide){
+    w=R.fw-24;N.style.width=w+'px';
+    if(inFree>=N.offsetHeight+10){x=R.fx+12;y=t.inEnd+4}
+    else{w=Math.min(R.rw,620);N.style.width=w+'px';x=R.rx;y=t.outEnd+6}
+  }else{w=R.fw;N.style.width=w+'px';x=R.fx;y=t.outEnd+6}
+  place(N,x,y);
+  const h=Math.max(T.clientHeight,y+N.offsetHeight+40);T.style.height=h+'px';
+  if(wide&&h-24>R.fh){R.fh=h-24;F.style.height=R.fh+'px'}
+}
+function clearNote(){
+  $('note').hidden=true;$('noteTxt').textContent='';why.value='';why.style.borderColor='';why.placeholder='Ich habe diese Stoffe als organisch eingeordnet, weil …';
+  try{localStorage.removeItem('orgchem-why')}catch(e){}
+  sol(false);bSol.hidden=true;
 }
 $('bEnd').onclick=()=>{
   tidy();
   const ch=chosen();$('ecnt').textContent=ch.length;
   $('chips').innerHTML=ch.map(n=>`<span>${n}</span>`).join('');
-  setTimeout(()=>{$('endp').hidden=false;if(!done)why.focus()},800);
+  setTimeout(()=>{$('endp').hidden=false;why.focus()},800);
 };
 $('bBack').onclick=()=>{$('endp').hidden=true};
 $('bDone').onclick=()=>{
   if(why.value.trim().length<10){why.style.borderColor='#d4442a';why.placeholder='Bitte schreibe zuerst eine Begründung.';why.focus();return}
-  done=true;why.readOnly=true;$('bDone').hidden=true;$('bBack').hidden=true;$('doneMsg').hidden=false;$('bEnd').textContent='Begründung';
+  $('endp').hidden=true;showNote();bSol.hidden=false;
 };
-$('bCopy').onclick=()=>{const t=`Als organisch eingeordnet: ${chosen().join(', ')}\n\nBegründung: ${why.value}`;
-  navigator.clipboard.writeText(t).then(()=>{$('bCopy').textContent='Kopiert'},()=>{why.readOnly=false;why.select();why.readOnly=true})};
 const bSol=$('bSol');
 const sol=on=>{T.classList.toggle('sol',on);bSol.classList.toggle('on',on);bSol.setAttribute('aria-pressed',on);bSol.textContent=on?'Lösung verbergen':'Lösung zeigen'};
-$('bShow').onclick=()=>{$('endp').hidden=true;bSol.hidden=false;sol(true)};
 bSol.onclick=()=>sol(!T.classList.contains('sol'));
 $('bFs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.body.requestFullscreen().catch(()=>{})}catch(e){}};
 
 let lw=0;
-const ro=new ResizeObserver(()=>{const w=T.clientWidth;if(Math.abs(w-lw)<4)return;lw=w;layout();
-  cards.forEach(c=>{if(c.dataset.in=='1'&&!inField(c)){place(c,R.fx+10+Math.random()*Math.max(0,R.fw-CW-20),R.fy+46+Math.random()*Math.max(0,R.fh-CH-56))}});
-  mix();});
+/* Größenänderung: vor dem Start neu verteilen; danach nur bei deutlicher Änderung ordentlich neu anordnen
+   (kleine Änderungen, z. B. eine erscheinende Bildlaufleiste, verschieben nichts) */
+const ro=new ResizeObserver(()=>{const w=T.clientWidth,d=Math.abs(w-lw);if(d<4)return;
+  if(!started){lw=w;layout();mix();return}
+  if(d<60){cards.forEach(c=>{if(c.offsetLeft>w-CW)place(c,w-CW-4,c.offsetTop)});return}
+  lw=w;layout();if($('note').hidden)tidy();else showNote();});
 ro.observe(T);
 update();
 }

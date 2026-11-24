@@ -6,7 +6,8 @@ Schülerinnen und Schüler sortieren 36 Alltagsprodukte aus den Bereichen Nahrun
 
 1. Arbeitsauftrag lesen und auf **Start** klicken.
 2. Alle Produkte, die sie für organisch halten, in das Feld „Organische Stoffe“ ziehen.
-3. Mit **Ende** werden die Karten geordnet, anschließend wird die Gruppierung schriftlich begründet.
-4. Nach dem Abgeben kann die Lösung angezeigt werden (Rahmenfarbe: organisch / anorganisch).
+3. Mit **Ende** werden die Karten lückenlos geordnet, anschließend wird die Gruppierung schriftlich begründet.
+4. Nach dem **Speichern** erscheint die Begründung auf dem Tisch, und die Lösung kann angezeigt werden (Rahmenfarbe: organisch / anorganisch).
+5. **Mischen** entfernt die Begründung wieder und leert das Eingabefeld.
 
 Die Anwendung besteht aus einer einzigen Datei (`index.html`) und läuft direkt im Browser, z. B. über GitHub Pages.
