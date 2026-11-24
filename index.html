@@ -116,7 +116,7 @@ button.big{min-height:52px;font-size:18px;padding:0 34px}
 <div id="table">
   <div id="field"><div class="fh"><span>Organische Stoffe</span><small id="fcnt">0 Stoffe</small></div><p class="fe">Ziehe die organischen Stoffe hierher.</p></div>
   <div id="note" hidden><div class="nh">Unsere Begründung</div><p id="noteTxt"></p></div>
-  <div class="hint">36 Produkte · eingeordnet nach Hauptbestandteil</div>
+  <div class="hint"><span id="nP"></span> Produkte · eingeordnet nach Hauptbestandteil</div>
 </div>
 
 <div class="ov" id="intro">
@@ -150,7 +150,7 @@ button.big{min-height:52px;font-size:18px;padding:0 34px}
 
 <script>
 {
-const B={N:'Nahrung',P:'Putzen',W:'Waschen',K:'Kunststoffe',E:'Nahrungsergänzung',A:'Arzneimittel'};
+const B={U:'Natur',N:'Nahrung',P:'Putzen',W:'Waschen',K:'Kunststoffe',E:'Nahrungsergänzung',A:'Arzneimittel'};
 
 /* ---------- Zeichenhelfer (viewBox 0 0 100 100, Boden bei y≈94) ---------- */
 const S=(rx=32)=>`<ellipse cx="50" cy="94" rx="${rx}" ry="4.5" fill="url(#gSh)"/>`;
@@ -174,6 +174,7 @@ flame:(x,y)=>`<path d="M${x} ${y-8}q7 6 5 11a5 5 0 0 1-10 0q-1-5 5-11z" fill="#2
 bubbles:(x,y,c='#fff')=>[[0,0,4],[5,-4,2.6],[6,3,2],[-5,-3,2.2]].map(([a,b,r])=>`<circle cx="${x+a}" cy="${y+b}" r="${r}" fill="none" stroke="${c}" stroke-width="1"/><circle cx="${x+a-r*.35}" cy="${y+b-r*.35}" r="${r*.25}" fill="${c}"/>`).join(''),
 fish:(x,y,c='#fff')=>`<path d="M${x-8} ${y}q7-7 14 0q-7 7-14 0zM${x+6} ${y}l5-4v8z" fill="${c}"/><circle cx="${x-4}" cy="${y-1}" r=".9" fill="#1d5c8a"/>`,
 straw:(x,y)=>`<path d="M${x} ${y+7}q-7-4-6-10q2-3 6-2q4-1 6 2q1 6-6 10z" fill="#e0283e"/><path d="M${x-4} ${y-4}l4 2 4-2-4-2z" fill="#3c8b2c"/>${[[-2,0],[2,1],[0,4],[-3,3],[3,-2]].map(([a,b])=>`<circle cx="${x+a}" cy="${y+b}" r=".5" fill="#ffd86b"/>`).join('')}`,
+wheat:(x,y,c='#c99a2e')=>`<path d="M${x} ${y+12}V${y-10}" stroke="${c}" stroke-width="1.1"/>${[-8,-4,0,4].map(d=>`<ellipse cx="${x-2.6}" cy="${y+d}" rx="1.6" ry="3" transform="rotate(-30 ${x-2.6} ${y+d})" fill="${c}"/><ellipse cx="${x+2.6}" cy="${y+d}" rx="1.6" ry="3" transform="rotate(30 ${x+2.6} ${y+d})" fill="${c}"/>`).join('')}<ellipse cx="${x}" cy="${y-11}" rx="1.4" ry="2.6" fill="${c}"/>`,
 pill:(x,y,c='#fff')=>`<g transform="rotate(-30 ${x} ${y})"><rect x="${x-7}" y="${y-3}" width="14" height="6" rx="3" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width=".5"/><path d="M${x} ${y-3}v6" stroke="rgba(0,0,0,.2)" stroke-width=".6"/></g>`
 };
 
@@ -273,6 +274,28 @@ ointment(){const p='M20 74L22 50Q40 44 76 46L86 44V58L76 56Q40 62 22 58Z';
  return S(36)+`<g transform="rotate(-12 50 60)"><rect x="5" y="46" width="16" height="14" rx="2" fill="#2b6cc4"/>${rid(5,46,16,14)}<rect x="5" y="46" width="16" height="14" rx="2" fill="url(#gV)"/>`+
  `<path d="M21 46H78L86 44V62L78 60H21Z" fill="url(#gMet)"/><path d="M80 45.5V60.5M83 45V61" stroke="#7d848b" stroke-width=".6"/>`+
  `<rect x="30" y="47" width="40" height="12" fill="#fff" opacity=".85"/>${tx(50,55.6,'ZINKSALBE','#2b6cc4',6.6)}<path d="M21 46H78L86 44V62L78 60H21Z" fill="url(#gV)" opacity=".6"/></g>`},
+// Mehltüte aus Papier mit gefaltetem Kopf
+flour(){const p='M26 24H74V88Q74 92 70 92H30Q26 92 26 88Z';
+ return S(28)+`<path d="M28 12H72L74 24H26Z" fill="#ece6d6"/><path d="M28 12H72L74 24H26Z" fill="#000" opacity=".08"/><path d="M30 18H70" stroke="#000" stroke-opacity=".12"/>`+
+ `<path d="${p}" fill="#f6f1e4"/><rect x="26" y="32" width="48" height="14" fill="#2f6aa8"/>${tx(50,43,'MEHL','#fff',10)}`+
+ `<ellipse cx="50" cy="66" rx="13" ry="12" fill="#f3e3b8"/>${I.wheat(50,66)}${tx(50,86,'Type 405','#2f6aa8',6,700,'Archivo Narrow')}`+
+ `<path d="${p}" fill="url(#gSoft)"/><path d="M30 26l-1 62M70 26l1 62" stroke="#000" stroke-opacity=".05" stroke-width="2"/><path d="${p}" fill="none" stroke="rgba(0,0,0,.18)" stroke-width=".6"/>`},
+// Reisbeutel, durchsichtig mit Körnern
+rice(){const p='M24 22Q24 16 30 16H70Q76 16 76 22V86Q76 92 70 92H30Q24 92 24 86Z';let g='';
+ for(let i=0;i<90;i++){const x=28+((i*29)%44),y=50+((i*47)%38),r=(i*37)%180;g+=`<ellipse cx="${x}" cy="${y}" rx="1.9" ry=".8" transform="rotate(${r} ${x} ${y})" fill="${i%3?'#fbf8ef':'#e9e2cf'}"/>`}
+ return S(28)+`<path d="${p}" fill="#eef2f4" opacity=".7"/><path d="M25 46H75V86Q75 91 70 91H30Q25 91 25 86Z" fill="#f2ecdc"/>`+g+
+ `<rect x="24" y="16" width="52" height="8" fill="#c0392b"/><rect x="32" y="28" width="36" height="16" rx="2" fill="#fff"/>${tx(50,40,'REIS','#c0392b',10)}`+
+ `<path d="${p}" fill="url(#gSoft)" opacity=".8"/><path d="M30 26V86" stroke="#fff" stroke-width="2.4" opacity=".6" stroke-linecap="round"/><path d="${p}" fill="none" stroke="#b9c3c9" stroke-width=".7"/>`},
+// Laubbaum
+tree(){const b=(x,y,r,c)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
+ return S(26)+`<path d="M46 92L47 60Q42 52 36 50L38 48Q44 50 48 55L49 44H52L53 56Q57 50 63 48L64 50Q58 53 55 60L56 92Z" fill="#6b4a2b"/><path d="M50 92V60" stroke="#8a6440" stroke-width="2"/>`+
+ b(34,44,15,'#3f7f2e')+b(66,44,15,'#3a7529')+b(50,30,19,'#4b8f35')+b(40,28,13,'#4f9638')+b(60,26,12,'#478a31')+b(50,48,14,'#3c7a2b')+
+ b(44,22,7,'#7fbf52')+b(58,20,5,'#6fb046')+b(32,38,5,'#6aa944')+b(68,50,6,'#2f6522')+b(34,52,6,'#2f6522')},
+// Blume im Topf
+flower(){const pet=[0,60,120,180,240,300].map(a=>`<ellipse cx="50" cy="18" rx="6" ry="10" transform="rotate(${a} 50 28)" fill="#e94b6a"/>`).join('');
+ return S(22)+`<path d="M50 36Q48 52 50 66" stroke="#3d8b37" stroke-width="2.6" fill="none"/><path d="M50 54Q38 46 34 52Q42 58 50 56Z" fill="#4fa046"/><path d="M50 50Q62 40 67 46Q60 53 50 52Z" fill="#45963d"/>`+
+ pet+`<circle cx="50" cy="28" r="6" fill="#f6c02c"/><circle cx="48" cy="26" r="2" fill="#fff3b0"/>`+
+ `<path d="M32 64H68L64 90Q63 92 60 92H40Q37 92 36 90Z" fill="#c8673a"/><rect x="30" y="62" width="40" height="8" rx="1.5" fill="#d9774a"/><path d="M32 64H68L64 90Q63 92 60 92H40Q37 92 36 90Z" fill="url(#gCyl)" opacity=".7"/>`},
 // Kunststoff-Ampullen
 ampoule(){const one=(x,r)=>{const p=`M${x-4} 14H${x+4}V20L${x+3} 24Q${x+9} 28 ${x+9} 34V84Q${x+9} 90 ${x+4} 90H${x-4}Q${x-9} 90 ${x-9} 84V34Q${x-9} 28 ${x-3} 24L${x-4} 20Z`;
   return `<g transform="rotate(${r} ${x} 90)"><rect x="${x-6}" y="6" width="12" height="9" rx="2" fill="#eef4f7" stroke="#b8ccd6" stroke-width=".6"/><path d="${p}" fill="#eaf3f7" opacity=".85"/><path d="M${x-8} 46H${x+8}V84Q${x+8} 89 ${x+4} 89H${x-4}Q${x-8} 89 ${x-8} 84Z" fill="#cde6f2" opacity=".7"/><rect x="${x-8.5}" y="56" width="17" height="14" fill="#fff"/>${tx(x,62,'NaCl','#2b6cc4',4.8)}${tx(x,68,'0,9 %','#2b6cc4',4.6,700)}<path d="${p}" fill="url(#gCyl)" opacity=".7"/><path d="${p}" fill="none" stroke="#9ebccb" stroke-width=".6"/></g>`};
@@ -294,10 +317,10 @@ const D=[
 ['Olivenöl','N','o','glass',{g:'#9aa84a',lq:'#7d8a12',lv:26,cap:'#1e2a10',nw:10,bw:28,t:12,nh:24,sh:48,ly:58,lh:26,lb:'#f4efdc',deco:`${tx(50,67,'Olivenöl','#3b4512',6.8,800)}${I.olive(50,76)}`}],
 ['Essig','N','o','glass',{g:'#e8d9a8',lq:'#e0b85a',lo:.55,lv:28,cap:'#7a1e1e',lb:'#fff',ly:60,lh:20,deco:`<rect x="34" y="60" width="32" height="5" fill="#7a1e1e"/>${tx(50,74,'ESSIG','#7a1e1e',8.6)}${fine(42,76.5,16,1)}`}],
 ['Mineralwasser','N','a','pet',{cap:'#2b6cc4',lq:'#bfe3f5',lv:30,lb:'#2b6cc4',deco:`${tx(50,72,'Mineral','#fff',6,800)}`}],
-['Natron','N','a','sachet',{c:'#d8392b',deco:`${tx(50,44,'NATRON','#fff',10)}<circle cx="50" cy="62" r="10" fill="#fff" opacity=".95"/>${tx(50,65,'NaHCO₃','#d8392b',5.4,700)}${fine(36,79,28,3,'#fff',.6)}`}],
 ['Butter','N','o','butter',{}],
 ['Backpulver','N','a','sachet',{c:'#f7f3e6',deco:`<rect x="29" y="34" width="42" height="14" fill="#c4322a"/>${tx(50,44,'Backpulver','#fff',7.4)}<ellipse cx="50" cy="64" rx="12" ry="7" fill="#e7c48a"/><path d="M40 63q10-9 20 0" fill="#f2d7a5"/>${fine(36,78,28,3,'#7a5a20',.35)}`}],
-['Spülmittel','P','o','squeeze',{c:'#7cc86a',c2:'#3c9a3f',l:'SPÜLMITTEL'}],
+['Mehl','N','o','flour',{}],
+['Reis','N','o','rice',{}],
 ['Spiritus','P','o','glass',{g:'#d6e2f7',lq:'#3e63d8',lo:.75,lv:26,cap:'#c4322a',nw:12,bw:30,t:12,nh:16,sh:40,lb:'#fff',ly:56,lh:26,deco:`${I.flame(50,64)}${tx(50,78,'SPIRITUS','#2a4fb8',4.9)}`}],
 ['WC-Reiniger','P','a','wc',{}],
 ['Chlorreiniger','P','a','spray',{c:'#f4f6f7',tr:'#c4322a',lb:'#fff',deco:`<rect x="33" y="52" width="34" height="9" fill="#c4322a"/>${tx(50,59,'CHLOR','#fff',7)}${I.drop(50,69,'#9ed0ec',.8)}${fine(40,75,20,2)}`}],
@@ -317,14 +340,15 @@ const D=[
 ['Omega-3-Kapseln','E','o','jar',{c:'#7a4a12',op:.85,cap:'#1d1f22',lb:'#1d5c8a',deco:`${tx(50,60,'OMEGA-3','#fff',7.4)}${I.fish(50,69)}`,front:`<g transform="rotate(-20 78 88)"><ellipse cx="78" cy="88" rx="7" ry="3.6" fill="url(#gCaps)"/></g><g transform="rotate(15 20 89)"><ellipse cx="20" cy="89" rx="7" ry="3.6" fill="url(#gCaps)"/></g>`}],
 ['Magnesium','E','a','tube',{c:'#3a86c8',cap:'#3a86c8',deco:`${tx(50,52,'Mg','#fff',13)}${tx(50,66,'MAGNESIUM','#fff',4)}${fine(42,70,16,2,'#fff',.5)}`}],
 ['Calcium','E','a','jar',{c:'#f4f4f0',cap:'#f4f4f0',lb:'#fff',deco:`<rect x="28" y="48" width="44" height="7" fill="#c4322a"/>${tx(50,68,'Ca','#c4322a',12)}${fine(38,72,24,1,'#000',.25)}`,front:`<ellipse cx="80" cy="90" rx="6" ry="2.5" fill="#fbfbf8" stroke="#d6d6cf" stroke-width=".6"/>`}],
-['Eisentabletten','E','a','blister',{t:'#a32a34'}],
 ['Aspirin','A','o','med',{c:'#1f8a4c',l:'ASS 500',s:'Tabletten',p:'#fff'}],
 ['Ibuprofen','A','o','med',{c:'#d23f5a',l:'IBU 400',s:'Filmtabletten',p:'#f6d9df'}],
 ['Zinksalbe','A','a','ointment',{}],
 ['Kohletabletten','A','a','blister',{t:'#1e2124'}],
 ['Jodtabletten','A','a','med',{c:'#6a3fb5',l:'Kalium-',fs:8.4,s:'iodid 200 µg',p:'#fff'}],
 ['Hustensaft','A','o','glass',{g:'#5a2a0e',go:.9,lq:'#3a1606',lv:32,cap:'#fff',ridge:false,nw:14,bw:34,t:16,nh:10,sh:36,lb:'#fff',ly:52,lh:28,deco:`${tx(50,62,'Husten-','#7a3a10',7.6)}${tx(50,70,'saft','#7a3a10',7.6)}${fine(40,74,20,2)}`,top:`<path d="M40 4H60L58 16H42Z" fill="#fff" opacity=".9" stroke="#bbb" stroke-width=".5"/><path d="M42 8H58" stroke="#bbb" stroke-width=".5"/>`}],
-['Kochsalzlösung','A','a','ampoule',{}]
+['Kochsalzlösung','A','a','ampoule',{}],
+['Baum','U','o','tree',{}],
+['Blume','U','o','flower',{}]
 ].map((r,i)=>({i,n:r[0],b:r[1],o:r[2],t:r[3],x:r[4]}));
 
 const T=document.getElementById('table'),F=document.getElementById('field'),$=id=>document.getElementById(id);
@@ -335,6 +359,7 @@ T.insertAdjacentHTML('beforeend',D.map(d=>`<div class="card" data-i="${d.i}" dat
 <svg viewBox="0 0 100 100" aria-hidden="true">${V[d.t](d.x)}</svg><div class="nm">${d.n}</div>
 <span class="tag" style="background:var(--${d.o=='o'?'org':'ano'})">${d.o=='o'?'organisch':'anorganisch'}</span></div>`).join(''));
 const cards=[...T.querySelectorAll('.card')];
+$('nP').textContent=cards.length;
 
 const place=(el,x,y)=>{el.style.left=x+'px';el.style.top=y+'px'};
 const animate=()=>{cards.forEach(c=>c.classList.add('anim'));clearTimeout(animate.t);animate.t=setTimeout(()=>cards.forEach(c=>c.classList.remove('anim')),650)};
@@ -418,7 +443,7 @@ function fit(withNote){
       for(const o of opts)if(o.t<=H&&(!best||o.t<best.t))best={k,fc,oc,fw,ow,fh,oh,m:o.m,t:o.t};
     }
   }
-  if(!best){const k=.3,cw=CW*k,C=Math.max(2,Math.floor((W-GAP-2*PAD+g)/(cw+g))),fc=Math.max(1,Math.round(C*nI/36)),oc=Math.max(1,C-fc);
+  if(!best){const k=.3,cw=CW*k,C=Math.max(2,Math.floor((W-GAP-2*PAD+g)/(cw+g))),fc=Math.max(1,Math.round(C*nI/cards.length)),oc=Math.max(1,C-fc);
     const fw=2*PAD+fc*(cw+g)-g;best={k,fc,oc,fw,ow:W-fw-GAP,fh:TOP+Math.max(1,Math.ceil(nI/fc))*(CH*k+g)+PAD-g,oh:Math.ceil(nO/oc)*(CH*k+g)-g,m:withNote?'b':'-'}}
   const {k,fc,oc,fw,ow,fh,oh,m}=best,cw=CW*k,ch=CH*k,x0=8,y0=8,ox=x0+fw+GAP;
   K=k;

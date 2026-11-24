@@ -2,7 +2,7 @@
 
 Interaktive Lernanwendung zur Einführung in die organische Chemie – erstellt von Markus Seitz.
 
-Schülerinnen und Schüler sortieren 36 Alltagsprodukte aus den Bereichen Nahrung, Putzen, Waschen, Kunststoffe, Nahrungsergänzungsmittel und Arzneimittel:
+Schülerinnen und Schüler sortieren 37 Produkte aus der Natur und aus den Bereichen Nahrung, Putzen, Waschen, Kunststoffe, Nahrungsergänzungsmittel und Arzneimittel:
 
 1. Arbeitsauftrag lesen und auf **Start** klicken.
 2. Alle Produkte, die sie für organisch halten, in das Feld „Organische Stoffe“ ziehen.
