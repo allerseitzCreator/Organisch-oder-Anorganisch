@@ -39,7 +39,9 @@ background-size:100px 100px,100px 100px,20px 20px,20px 20px;overflow:hidden;touc
 border-radius:12px;background:var(--card);color:var(--cardInk);border:1px solid var(--line);
 box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 14px -8px rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;padding:4px 6px 8px}
 .card.drag{cursor:grabbing;box-shadow:0 18px 30px -10px rgba(0,0,0,.4)}
-.card.anim{transition:left .55s cubic-bezier(.3,.8,.3,1),top .55s cubic-bezier(.3,.8,.3,1)}
+.card{transform-origin:0 0}
+.card.anim{transition:left .55s cubic-bezier(.3,.8,.3,1),top .55s cubic-bezier(.3,.8,.3,1),scale .55s}
+#field.anim,#note.anim{transition:left .55s,top .55s,width .55s,height .55s}
 .card svg{width:108px;height:108px;flex:none}
 .nm{font:700 13px/1.15 "Archivo Narrow",sans-serif;text-align:center;text-wrap:balance}
 .tag{display:none;position:absolute;top:5px;right:5px;padding:1px 6px;border-radius:20px;font:700 10px "Archivo Narrow",sans-serif;color:#fff}
@@ -70,6 +72,8 @@ button.big{min-height:52px;font-size:18px;padding:0 34px}
 .chips span{background:#e3f2f1;color:#0b5a56;border-radius:20px;padding:3px 11px;font:600 14px "Archivo Narrow",sans-serif}
 .chips em{color:#7a7e84}
 #note{position:absolute;z-index:60;background:#fffdf4;color:#17191c;border:2px solid var(--org);border-radius:14px;padding:14px 18px 16px;box-shadow:0 10px 24px -12px rgba(0,0,0,.35)}
+#field.sm .fh{flex-direction:column;gap:0;padding:8px 10px 0}#field.sm .fh span{font-size:15px}#field.sm small{font-size:12px}
+#note.sm{padding:10px 12px 12px}#note.sm .nh{font-size:15px;margin-bottom:4px}#note.sm p{font-size:14px;line-height:1.4}
 #note .nh{font:800 18px/1.1 Archivo,sans-serif;color:var(--org);margin-bottom:8px}
 #note p{margin:0;font:17px/1.5 Archivo,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
 .zone{position:absolute;border:2px dashed var(--grid2);border-radius:16px;background:var(--zone);resize:both;overflow:hidden;min-width:160px;min-height:120px}
@@ -324,7 +328,7 @@ const D=[
 ].map((r,i)=>({i,n:r[0],b:r[1],o:r[2],t:r[3],x:r[4]}));
 
 const T=document.getElementById('table'),F=document.getElementById('field'),$=id=>document.getElementById(id);
-let top=10,started=false;
+let top=10,started=false,K=1,compact=false;
 const CW=128,CH=150;
 
 T.insertAdjacentHTML('beforeend',D.map(d=>`<div class="card" data-i="${d.i}" data-o="${d.o}" data-in="0" tabindex="0" aria-label="${d.n}">
@@ -350,7 +354,7 @@ function layout(){
   Object.assign(F.style,{left:R.fx+'px',top:R.fy+'px',width:R.fw+'px',height:R.fh+'px'});
   T.style.height=R.H+'px';
 }
-const inField=c=>{const x=c.offsetLeft+CW/2,y=c.offsetTop+CH/2;return x>R.fx&&x<R.fx+R.fw&&y>R.fy&&y<R.fy+R.fh};
+const inField=c=>{const x=c.offsetLeft+CW*K/2,y=c.offsetTop+CH*K/2;return x>R.fx&&x<R.fx+R.fw&&y>R.fy&&y<R.fy+R.fh};
 
 function mix(){
   const out=cards.filter(c=>c.dataset.in!='1');
@@ -374,49 +378,75 @@ cards.forEach(c=>{
     if(!started)return;
     e.preventDefault();c.setPointerCapture(e.pointerId);c.style.zIndex=++top+100;c.classList.add('drag');
     const x0=c.offsetLeft,y0=c.offsetTop,sx=e.clientX,sy=e.clientY;
-    const mv=ev=>{place(c,Math.min(Math.max(0,x0+ev.clientX-sx),T.clientWidth-CW),Math.min(Math.max(0,y0+ev.clientY-sy),T.clientHeight-CH));F.classList.toggle('hot',inField(c))};
+    const mv=ev=>{place(c,Math.min(Math.max(0,x0+ev.clientX-sx),T.clientWidth-CW*K),Math.min(Math.max(0,y0+ev.clientY-sy),T.clientHeight-CH*K));F.classList.toggle('hot',inField(c))};
     const up=()=>{c.removeEventListener('pointermove',mv);c.removeEventListener('pointerup',up);c.classList.remove('drag');F.classList.remove('hot');
       c.dataset.in=inField(c)?'1':'0';if(c.dataset.in=='1')c.style.rotate='0deg';update()};
     c.addEventListener('pointermove',mv);c.addEventListener('pointerup',up);
   });
 });
 
-$('bMix').onclick=()=>{clearNote();mix()};
+$('bMix').onclick=()=>{clearNote();unfit();mix()};
 $('bStart').onclick=()=>{started=true;$('intro').hidden=true;update()};
 
 const why=$('why');
 try{why.value=localStorage.getItem('orgchem-why')||''}catch(e){}
 why.addEventListener('input',()=>{why.style.borderColor='';try{localStorage.setItem('orgchem-why',why.value)}catch(e){}});
 const chosen=()=>cards.filter(c=>c.dataset.in=='1').map(c=>D[c.dataset.i].n);
-/* Karten lückenlos in Reihen ordnen: im Feld und daneben */
-function tidy(){
-  const ord=a=>a.sort((p,q)=>(Math.round(p.offsetTop/60)-Math.round(q.offsetTop/60))||(p.offsetLeft-q.offsetLeft));
+/* Nach dem Beenden: alles so anordnen und verkleinern, dass Karten, Feld und Begründung
+   ohne Scrollen in das Fenster passen */
+const ord=a=>a.sort((p,q)=>(Math.round(p.offsetTop/40)-Math.round(q.offsetTop/40))||(p.offsetLeft-q.offsetLeft));
+function fit(withNote){
+  compact=true;
+  const N=$('note'),hd=document.querySelector('header').offsetHeight;
+  if(withNote){$('noteTxt').textContent=why.value.trim();N.hidden=false}
+  const W=T.clientWidth-16,H=window.innerHeight-hd-16;
+  N.classList.toggle('sm',W<640);
   const ins=ord(cards.filter(c=>c.dataset.in=='1')),outs=ord(cards.filter(c=>c.dataset.in!='1'));
-  const g=10,fc=Math.max(1,Math.floor((R.fw-24+g)/(CW+g))),fx0=R.fx+Math.round((R.fw-(fc*(CW+g)-g))/2);
-  const need=50+Math.ceil(ins.length/fc)*(CH+g)+8;
-  if(need>R.fh){R.fh=need;F.style.height=need+'px'}
-  ins.forEach((c,k)=>{c.style.rotate='0deg';place(c,fx0+(k%fc)*(CW+g),R.fy+50+Math.floor(k/fc)*(CH+g))});
-  const oc=Math.max(1,Math.floor((R.rw+g)/(CW+g))),ry0=R.rx>R.fx+10?R.ry:R.fy+R.fh+20;
-  outs.forEach((c,k)=>{c.style.rotate='0deg';place(c,R.rx+(k%oc)*(CW+g),ry0+Math.floor(k/oc)*(CH+g))});
-  const h=Math.max(R.fy+R.fh+24,ry0+Math.ceil(outs.length/oc)*(CH+g)+30,window.innerHeight-120);
-  T.style.height=h+'px';if(R.rx>R.fx+10&&h-24>R.fh){R.fh=h-24;F.style.height=R.fh+'px'}
+  const nI=ins.length,nO=outs.length,g=8,TOP=46,PAD=10,GAP=16,cache={};
+  const nh=w=>{if(!withNote)return 0;w=Math.round(w);if(cache[w]==null){N.style.width=w+'px';cache[w]=N.offsetHeight}return cache[w]};
+  let best=null;
+  for(let k=1;k>=.3&&!best;k=Math.round((k-.025)*1000)/1000){
+    const cw=CW*k,ch=CH*k,C=Math.floor((W-GAP-2*PAD+g)/(cw+g));
+    if(C<2)continue;
+    for(let fc=1;fc<C;fc++){
+      const oc=C-fc,rI=Math.max(1,Math.ceil(nI/fc)),rO=Math.ceil(nO/oc);
+      const fw=2*PAD+fc*(cw+g)-g,ow=W-fw-GAP,fh=TOP+rI*(ch+g)+PAD-g,oh=rO*(ch+g)-g;
+      const opts=withNote?[
+        {m:'f',t:Math.max(fh+12+nh(fw),oh)},
+        {m:'o',t:Math.max(fh,oh+12+nh(ow))},
+        {m:'b',t:Math.max(fh,oh)+12+nh(W)}]:[{m:'-',t:Math.max(fh,oh)}];
+      for(const o of opts)if(o.t<=H&&(!best||o.t<best.t))best={k,fc,oc,fw,ow,fh,oh,m:o.m,t:o.t};
+    }
+  }
+  if(!best){const k=.3,cw=CW*k,C=Math.max(2,Math.floor((W-GAP-2*PAD+g)/(cw+g))),fc=Math.max(1,Math.round(C*nI/36)),oc=Math.max(1,C-fc);
+    const fw=2*PAD+fc*(cw+g)-g;best={k,fc,oc,fw,ow:W-fw-GAP,fh:TOP+Math.max(1,Math.ceil(nI/fc))*(CH*k+g)+PAD-g,oh:Math.ceil(nO/oc)*(CH*k+g)-g,m:withNote?'b':'-'}}
+  const {k,fc,oc,fw,ow,fh,oh,m}=best,cw=CW*k,ch=CH*k,x0=8,y0=8,ox=x0+fw+GAP;
+  K=k;
+  // Feld streckt sich bis zur Höhe der Nachbarspalte, wenn die Begründung nicht darunter steht
+  const fH=m=='f'?fh:m=='b'?Math.max(fh,oh):Math.max(fh,m=='o'?oh+12+nh(ow):oh);
+  R={...R,fx:x0,fy:y0,fw,fh:fH,rx:ox,ry:y0,rw:ow};
+  [F,N].forEach(e=>e.classList.add('anim'));setTimeout(()=>[F,N].forEach(e=>e.classList.remove('anim')),650);
+  F.classList.toggle('sm',fw<300);
+  Object.assign(F.style,{left:x0+'px',top:y0+'px',width:fw+'px',height:fH+'px'});
+  ins.forEach((c,i)=>{c.style.rotate='0deg';c.style.scale=k;place(c,x0+PAD+(i%fc)*(cw+g),y0+TOP+Math.floor(i/fc)*(ch+g))});
+  outs.forEach((c,i)=>{c.style.rotate='0deg';c.style.scale=k;place(c,ox+(i%oc)*(cw+g),y0+Math.floor(i/oc)*(ch+g))});
+  let bottom=Math.max(y0+fH,y0+oh);
+  if(withNote){
+    let nx,ny,nw;
+    if(m=='f'){nx=x0;ny=y0+fH+12;nw=fw}else if(m=='o'){nx=ox;ny=y0+oh+12;nw=ow}else{nx=x0;ny=bottom+12;nw=W}
+    N.style.width=nw+'px';place(N,nx,ny);bottom=Math.max(bottom,ny+N.offsetHeight);
+  }
+  T.style.height=Math.max(bottom+16,H+16)+'px';
   animate();
-  return {inEnd:R.fy+50+Math.ceil(ins.length/fc)*(CH+g),outEnd:ry0+Math.ceil(outs.length/oc)*(CH+g),ry0};
+  window.scrollTo({top:T.getBoundingClientRect().top+window.scrollY-hd});
 }
-/* Begründung dort ablegen, wo Platz ist */
-function showNote(){
-  const N=$('note'),t=tidy(),wide=R.rx>R.fx+10;
-  $('noteTxt').textContent=why.value.trim();N.hidden=false;
-  const inFree=R.fy+R.fh-t.inEnd-12;
-  let x,y,w;
-  if(wide){
-    w=R.fw-24;N.style.width=w+'px';
-    if(inFree>=N.offsetHeight+10){x=R.fx+12;y=t.inEnd+4}
-    else{w=Math.min(R.rw,620);N.style.width=w+'px';x=R.rx;y=t.outEnd+6}
-  }else{w=R.fw;N.style.width=w+'px';x=R.fx;y=t.outEnd+6}
-  place(N,x,y);
-  const h=Math.max(T.clientHeight,y+N.offsetHeight+40);T.style.height=h+'px';
-  if(wide&&h-24>R.fh){R.fh=h-24;F.style.height=R.fh+'px'}
+/* Zurück zur normalen Größe (nach Mischen) */
+function unfit(){
+  if(!compact)return;compact=false;K=1;F.classList.remove('sm');
+  cards.forEach(c=>c.style.scale='');layout();
+  const ins=ord(cards.filter(c=>c.dataset.in=='1')),g=10,fc=Math.max(1,Math.floor((R.fw-24+g)/(CW+g)));
+  const need=50+Math.ceil(ins.length/fc)*(CH+g)+8;if(need>R.fh){R.fh=need;F.style.height=need+'px'}
+  ins.forEach((c,i)=>place(c,R.fx+12+(i%fc)*(CW+g),R.fy+50+Math.floor(i/fc)*(CH+g)));
 }
 function clearNote(){
   $('note').hidden=true;$('noteTxt').textContent='';why.value='';why.style.borderColor='';why.placeholder='Ich habe diese Stoffe als organisch eingeordnet, weil …';
@@ -424,7 +454,7 @@ function clearNote(){
   sol(false);bSol.hidden=true;
 }
 $('bEnd').onclick=()=>{
-  tidy();
+  fit(false);
   const ch=chosen();$('ecnt').textContent=ch.length;
   $('chips').innerHTML=ch.map(n=>`<span>${n}</span>`).join('');
   setTimeout(()=>{$('endp').hidden=false;why.focus()},800);
@@ -432,7 +462,7 @@ $('bEnd').onclick=()=>{
 $('bBack').onclick=()=>{$('endp').hidden=true};
 $('bDone').onclick=()=>{
   if(why.value.trim().length<10){why.style.borderColor='#d4442a';why.placeholder='Bitte schreibe zuerst eine Begründung.';why.focus();return}
-  $('endp').hidden=true;showNote();bSol.hidden=false;
+  $('endp').hidden=true;bSol.hidden=false;fit(true);
 };
 const bSol=$('bSol');
 const sol=on=>{T.classList.toggle('sol',on);bSol.classList.toggle('on',on);bSol.setAttribute('aria-pressed',on);bSol.textContent=on?'Lösung verbergen':'Lösung zeigen'};
@@ -445,8 +475,9 @@ let lw=0;
 const ro=new ResizeObserver(()=>{const w=T.clientWidth,d=Math.abs(w-lw);if(d<4)return;
   if(!started){lw=w;layout();mix();return}
   if(d<60){cards.forEach(c=>{if(c.offsetLeft>w-CW)place(c,w-CW-4,c.offsetTop)});return}
-  lw=w;layout();if($('note').hidden)tidy();else showNote();});
+  lw=w;if(compact)fit(!$('note').hidden);else{layout();mix()}});
 ro.observe(T);
+let lh=window.innerHeight;window.addEventListener('resize',()=>{if(compact&&Math.abs(window.innerHeight-lh)>40){lh=window.innerHeight;fit(!$('note').hidden)}});
 update();
 }
 </script>
